@@ -1,0 +1,42 @@
+# --- Secretos / configuración local ---
+.env
+.env.*
+!.env.example
+!_env.example
+
+# --- Entornos virtuales ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- Pytest / coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# --- Herramientas de tipado / lint ---
+.mypy_cache/
+.ruff_cache/
+
+# --- Editores / IDEs ---
+.vscode/
+.idea/
+*.swp
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
