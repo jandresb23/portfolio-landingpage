@@ -81,7 +81,22 @@
       servicio de terceros.
 - [ ] **T-23** Conectar la suite de `pytest` a un workflow de GitHub
       Actions para que corra en cada push/PR. _(Pospuesto a propósito;
-      ver conversación — retomar cuando se desee CI automatizado.)_
+      ver conversación — retomar cuando se desee CI automatizado. No debe
+      confundirse con T-24, que es un workflow distinto y ya implementado.)_
+
+## Fase 5 — Despliegue y operación (completada)
+
+- [x] **T-24** Desplegar backend (Render Web Service) y frontend (Render
+      Static Site); cerrar CORS con `ALLOWED_ORIGINS` apuntando al dominio
+      real del frontend. → REQ-NF-03, `design.md §7`.
+- [x] **T-25** Workflow de GitHub Actions
+      (`.github/workflows/render-keepalive-sync.yml`) que mantiene despierto
+      el backend en el plan Free de Render (ping cada 10 min) y dispara
+      `POST /api/v1/sync` cada 6 horas automáticamente. → REQ-NF-07,
+      `design.md §11`.
+- [x] **T-26** Enlazar el ícono de GitHub del header a
+      `https://github.com/jandresb23` (antes apuntaba a `https://github.com`
+      genérico). → `frontend/index.html`.
 
 ## Fase 4 — Validación end-to-end manual (completada)
 
@@ -141,4 +156,5 @@ porque son errores comunes al desplegar este proyecto por primera vez):
 | REQ-NF-04 | T-05 |
 | REQ-NF-05 | T-06 |
 | REQ-NF-06 | T-07 |
+| REQ-NF-07 | T-25 |
 | REQ-NF-08 | T-01 |

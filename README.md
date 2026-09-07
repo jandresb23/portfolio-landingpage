@@ -90,6 +90,47 @@ curl -X POST https://tu-backend.onrender.com/api/v1/sync \
 Se recomienda automatizar esta llamada con un cron externo (GitHub Actions
 scheduled workflow, cron-job.org, etc.) con la frecuencia deseada.
 
+## Mantener el backend despierto y sincronizado (GitHub Actions)
+
+El repositorio incluye `.github/workflows/render-keepalive-sync.yml`, que:
+
+1. **Cada 10 minutos** hace `GET /` al backend para que el Web Service
+   gratuito de Render no entre en modo "sleep" por inactividad.
+2. **Cada 6 horas** además dispara `POST /api/v1/sync` para refrescar el
+   caché de GitHub/YouTube en Supabase automáticamente.
+
+También puede dispararse manualmente desde la pestaña **Actions** del repo
+(`workflow_dispatch`), con la opción de incluir o no el `/sync` en esa
+corrida puntual.
+
+### Configuración requerida (una sola vez)
+
+En GitHub → tu repositorio → **Settings** → **Secrets and variables** → **Actions**:
+
+| Tipo | Nombre | Valor |
+|---|---|---|
+| Variable (pestaña *Variables*) | `RENDER_BACKEND_URL` | URL de tu Web Service en Render, sin `/` al final. Ej: `https://portfolio-landingpage.onrender.com` |
+| Secret (pestaña *Secrets*) | `SYNC_SECRET_KEY` | El mismo valor que configuraste como `SYNC_SECRET_KEY` en las variables de entorno de Render. |
+
+> Se usa una **variable** (no secreto) para la URL porque no es información
+> sensible y así es más fácil de revisar/editar; el token sí va como
+> **secreto** porque es lo que autoriza `/sync`.
+
+Sin estas dos configuraciones, el workflow falla con un error claro en los
+logs de Actions (`curl` fallando contra una URL vacía, o `/sync` respondiendo
+`401`/`403` por un token vacío o incorrecto).
+
+### Limitaciones a tener en cuenta
+
+- GitHub no garantiza precisión exacta en `cron`; en repos con poca
+  actividad los triggers pueden retrasarse algunos minutos.
+- Si el repositorio es privado, este workflow consume minutos de la cuota
+  gratuita de GitHub Actions (2,000 min/mes); si es público, es ilimitado.
+- Este mecanismo evita el "sleep" pero no sustituye un monitor de
+  disponibilidad real (no te avisa si el backend cae por un error, solo lo
+  mantiene despierto). Para eso, un servicio como UptimeRobot sigue siendo
+  la opción recomendada si además quieres alertas.
+
 ## Pruebas
 
 Instala las dependencias de desarrollo y ejecuta la suite con `pytest`:

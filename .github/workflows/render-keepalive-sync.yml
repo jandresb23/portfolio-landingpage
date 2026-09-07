@@ -1,0 +1,57 @@
+name: Render keep-alive & sync
+
+# Dos propósitos en un solo workflow:
+#   1) "keep-awake": hace ping al endpoint raíz cada 10 minutos para que el
+#      Web Service gratuito de Render nunca llegue a los ~15 minutos de
+#      inactividad que activan su modo "sleep".
+#   2) "sync": dispara POST /api/v1/sync cada 6 horas para refrescar el
+#      caché de GitHub/YouTube en Supabase sin intervención manual.
+#
+# Requiere configurar en el repositorio (Settings → Secrets and variables → Actions):
+#   - Variable  RENDER_BACKEND_URL  → p. ej. https://portfolio-landingpage.onrender.com
+#   - Secret    SYNC_SECRET_KEY     → el mismo valor configurado en Render
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"  # cada 10 minutos → mantiene el servicio despierto
+    - cron: "0 */6 * * *"   # cada 6 horas    → además dispara /sync
+  workflow_dispatch:
+    inputs:
+      run_sync:
+        description: "Ejecutar también /sync en esta corrida manual"
+        type: boolean
+        default: true
+
+jobs:
+  keep-awake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping al endpoint raíz del backend
+        run: |
+          curl -sf "${{ vars.RENDER_BACKEND_URL }}/" \
+            && echo "Backend despierto y respondiendo." \
+            || (echo "::error::El backend no respondió." && exit 1)
+
+  sync:
+    # Solo corre en la corrida programada de sincronización (cada 6h) o
+    # cuando se dispara manualmente con run_sync=true. En los pings de cada
+    # 10 minutos, este job se salta para no golpear GitHub/YouTube de más.
+    if: >
+      github.event.schedule == '0 */6 * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_sync == true)
+    needs: keep-awake
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar POST /api/v1/sync
+        run: |
+          http_code=$(curl -s -o /tmp/sync_response.json -w "%{http_code}" \
+            -X POST "${{ vars.RENDER_BACKEND_URL }}/api/v1/sync" \
+            -H "Authorization: Bearer ${{ secrets.SYNC_SECRET_KEY }}")
+
+          echo "HTTP $http_code"
+          cat /tmp/sync_response.json
+
+          if [ "$http_code" -ne 200 ]; then
+            echo "::error::/sync respondió $http_code en vez de 200."
+            exit 1
+          fi

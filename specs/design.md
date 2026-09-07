@@ -187,7 +187,37 @@ de YouTube rechazando el origen `file://` al abrir el frontend con doble
 clic en vez de servirlo por HTTP.
 
 
-## 11. Riesgos conocidos / deuda técnica
+## 11. Automatización operativa: keep-alive y sincronización (GitHub Actions)
+
+`.github/workflows/render-keepalive-sync.yml` reemplaza la necesidad de
+disparar `/sync` manualmente y de preocuparse por el "sleep" del plan Free
+de Render:
+
+```
+┌───────────────────────────┐
+│ GitHub Actions (cron)     │
+│                            │
+│  */10 * * * *  ──────────▶│──▶ GET  /              (keep-awake, siempre)
+│  0 */6 * * *   ──────────▶│──▶ POST /api/v1/sync    (sync, cada 6h)
+└───────────────────────────┘
+```
+
+- El job `keep-awake` corre en **cada** disparo programado (cada 10 min).
+- El job `sync` solo corre cuando el disparo coincide con el cron de 6h
+  (usando `github.event.schedule` para diferenciarlo), o al ejecutarse
+  manualmente con la opción `run_sync` activada — así se evita llamar a
+  las APIs de GitHub/YouTube cada 10 minutos innecesariamente.
+- La URL del backend vive en una **variable** de repositorio
+  (`RENDER_BACKEND_URL`, no sensible) y el token de `/sync` en un
+  **secreto** (`SYNC_SECRET_KEY`), siguiendo el mismo principio de
+  REQ-NF-01: nunca hardcodeado en el workflow.
+
+Este mecanismo cubre REQ-NF-07 (disponibilidad de los endpoints de
+lectura) de forma indirecta: al mantener el proceso vivo, evita la latencia
+de "cold start" (30-60s) que sufriría el primer visitante después de un
+período de inactividad en el plan Free.
+
+## 12. Riesgos conocidos / deuda técnica
 
 - El caché no elimina registros obsoletos (repos borrados o videos
   removidos de la playlist permanecen indefinidamente). Ver `requirements.md §6`.
