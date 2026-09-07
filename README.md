@@ -28,7 +28,10 @@ app/
     ├── github_service.py      # Adaptador de la API de GitHub
     └── youtube_service.py     # Adaptador de la API de YouTube
 frontend/
-└── index.html                 # Portafolio estático
+├── index.html                  # Portafolio estático
+└── assets/
+    ├── logo_minimal_v1.png      # Isotipo (fondo transparente) — header y favicon
+    └── cursal_logo.jpg          # Logo completo con wordmark — sección Hero
 specs/
 ├── requirements.md
 ├── design.md
@@ -62,7 +65,10 @@ Copia `_env.example` a `.env` y completa los valores:
 
 ## Despliegue del frontend
 
-`frontend/index.html` es un archivo estático sin build step. Puede alojarse
+`frontend/index.html` es un archivo estático sin build step, e incluye la
+carpeta `frontend/assets/` con el logo del sitio (isotipo en el header y
+favicon, logo completo en la sección Hero) — asegúrate de subir esa carpeta
+junto con el HTML al hosting que elijas. Puede alojarse
 en Render Static Site, Vercel, Netlify o GitHub Pages. Antes de publicar,
 actualiza la constante `API_BASE` dentro del `<script>` con la URL real de
 tu backend en Render:
@@ -146,3 +152,6 @@ incluyendo las incidencias de configuración encontradas y su solución, en
   entorno real; ver `specs/tasks.md` para el detalle y las incidencias de
   configuración resueltas (tablas de Supabase, permisos de `service_role`,
   token de GitHub, embed de YouTube).
+- **Branding:** logo de Cursal insertado en el frontend (isotipo en el
+  header/favicon, logo completo en el Hero); imágenes optimizadas de
+  ~1 MB cada una a ~30-70 KB.
